@@ -3,12 +3,8 @@ package com.zufar.latihancameraxandfile
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -17,10 +13,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 //import androidx.compose.ui.node.CanFocusChecker.right
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -70,19 +63,12 @@ fun LatihanTakeImage()
     var capturedImageUri by remember {
         mutableStateOf<Uri>(Uri.EMPTY)
     }
-    var imageUri by remember {
-        mutableStateOf<Uri?>(null)
-    }
-   val bitmap = remember { mutableStateOf<Bitmap?>(null) }
+
 
     val cameraLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()){
             capturedImageUri = uri
         }
-
-    val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()){uri: Uri? ->
-        imageUri = uri
-    }
 
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -108,70 +94,23 @@ fun LatihanTakeImage()
         verticalArrangement = Arrangement.Bottom
     ) {
 
-        imageUri?.let {
-            if (Build.VERSION.SDK_INT < 28){
-                bitmap.value = MediaStore.Images
-                    .Media.getBitmap(context.contentResolver, it)
-            }else{
-                val source = ImageDecoder.createSource(context.contentResolver, it)
-                bitmap.value = ImageDecoder.decodeBitmap(source)
-            }
-
-            bitmap.value?.let {btm ->
-                Image(
-                    bitmap = btm.asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(400.dp)
-                        .padding(20.dp)
-                )
-            }
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Button(
-            modifier = Modifier.padding(10.dp),
-                onClick = {
-                    val permissionCheckResult =
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-
-                    if (permissionCheckResult == PackageManager.PERMISSION_GRANTED)
-                    {
-                        cameraLauncher.launch(uri)
-                    }
-                    else
-                    {
-                        permissionLauncher.launch(Manifest.permission.CAMERA)
-                    }
-                }) {
-                Text(text = "Capture Image")
-            }
-
-            Button(
+        Button(
 //            modifier = Modifier.padding(top = 50.dp),
-                onClick = { launcher.launch("image/*")}
-            ) {
-                Text(text = "Pick Image")
-            }
+            onClick = {
+            val permissionCheckResult =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
 
+            if (permissionCheckResult == PackageManager.PERMISSION_GRANTED)
+            {
+                cameraLauncher.launch(uri)
+            }
+            else
+            {
+                permissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }) {
+            Text(text = "Capture Image")
         }
-//        Button(
-////            modifier = Modifier.padding(top = 50.dp),
-//            onClick = {
-//                val permissionCheckResult =
-//                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-//
-//                if (permissionCheckResult == PackageManager.PERMISSION_GRANTED)
-//                {
-//                    cameraLauncher.launch(uri)
-//                }
-//                else
-//                {
-//                    permissionLauncher.launch(Manifest.permission.CAMERA)
-//                }
-//            }) {
-//            Text(text = "Capture Image")
-//        }
     }
 
 
